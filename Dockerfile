@@ -12,5 +12,7 @@ RUN mv *.jar $SONARQUBE_HOME/extensions/plugins \
 
 # Configure Azure Web App database entrypoint
 COPY entrypoint.sh ./bin/
+USER root
 RUN chmod +x ./bin/entrypoint.sh
+USER sonarqube
 ENTRYPOINT ["./bin/entrypoint.sh"]
