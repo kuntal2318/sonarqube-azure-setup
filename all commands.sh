@@ -3,7 +3,8 @@ export YOUR_ACR_NAME=***********
 export YOUR_KEY_VAULT=*********
 export containerusername=`az acr credential show --name *********** | jq '.username' | sed 's/"//g' `
 export containerpassword=`az acr credential show --name *********** | jq '.passwords[0].value' | sed 's/"//g' `
-
+export PROJECT_PREFIX=***********
+export LOCATION="westeurope"
 
 az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'sonarqube-sql-admin' --value sonarqube
 az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'sonarqube-sql-admin-password' --value Wordgrass85Pattern
@@ -11,9 +12,7 @@ az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'container-registry-a
 az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'container-registry-admin-password' --value $containerpassword
 
 # General
-export PROJECT_PREFIX="ce-1"
 export RESOURCE_GROUP_NAME="$PROJECT_PREFIX-sonarqube-rg"
-export LOCATION="westeurope"
 
 # SQL database related
 export SQL_ADMIN_USER=`az keyvault secret show -n sonarqube-sql-admin --vault-name $YOUR_KEY_VAULT | jq -r '.value'`
