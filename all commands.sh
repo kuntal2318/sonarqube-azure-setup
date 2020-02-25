@@ -1,8 +1,9 @@
 export CONTAINER_IMAGE_TAG=*********
 export YOUR_ACR_NAME=***********
 export YOUR_KEY_VAULT=*********
-export containerusername=`az acr credential show --name cedockerregistry | jq '.username' | sed 's/"//g' `
-export containerpassword=`az acr credential show --name cedockerregistry | jq '.passwords[0].value' | sed 's/"//g' `
+export containerusername=`az acr credential show --name *********** | jq '.username' | sed 's/"//g' `
+export containerpassword=`az acr credential show --name *********** | jq '.passwords[0].value' | sed 's/"//g' `
+
 
 az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'sonarqube-sql-admin' --value sonarqube
 az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'sonarqube-sql-admin-password' --value Wordgrass85Pattern
@@ -23,7 +24,7 @@ export DATABASE_SKU="S0"
 
 # Webapp related 
 export APP_SERVICE_NAME="$PROJECT_PREFIX-sonarqube-app-service"
-export APP_SERVICE_SKU="S1"
+export APP_SERVICE_SKU="P3v2"
 
 # Container image related
 export CONTAINER_REGISTRY_NAME="$YOUR_ACR_NAME"
@@ -40,12 +41,12 @@ export DB_CONNECTION_STRING="jdbc:sqlserver://$SQL_SERVER_NAME.database.windows.
 git clone https://github.com/kuntal2318/sonarqube-azure-setup.git && cd sonarqube-azure-setup
 
 # Log into your Azure Container Registry  
-az acr login --name $CONTAINER_REGISTRY_NAME
+sudo az acr login --name $CONTAINER_REGISTRY_NAME
 
 # Build the image and push to the registry
-docker build -t $CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG .
-docker tag $CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG "$CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG"
-docker push "$CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG"
+sudo docker build -t $CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG .
+sudo docker tag $CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG "$CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG"
+sudo docker push "$CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG"
 
 # Add resource group; tag appropriately :-)
 az group create \
@@ -118,4 +119,3 @@ az webapp restart \
 az webapp log download \
     --resource-group $RESOURCE_GROUP_NAME \
     --name $WEBAPP_NAME
- 
