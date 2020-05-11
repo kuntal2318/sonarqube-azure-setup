@@ -1,15 +1,15 @@
-export CONTAINER_IMAGE_TAG=*********
-export YOUR_ACR_NAME=***********
+#export CONTAINER_IMAGE_TAG=*********
+#export YOUR_ACR_NAME=***********
 export YOUR_KEY_VAULT=*********
-export containerusername=`az acr credential show --name *********** | jq '.username' | sed 's/"//g' `
-export containerpassword=`az acr credential show --name *********** | jq '.passwords[0].value' | sed 's/"//g' `
+#export containerusername=`az acr credential show --name *********** | jq '.username' | sed 's/"//g' `
+#export containerpassword=`az acr credential show --name *********** | jq '.passwords[0].value' | sed 's/"//g' `
 export PROJECT_PREFIX=***********
 export LOCATION="westeurope"
 
 az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'sonarqube-sql-admin' --value sonarqube
 az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'sonarqube-sql-admin-password' --value Wordgrass85Pattern
-az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'container-registry-admin' --value $containerusername
-az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'container-registry-admin-password' --value $containerpassword
+#az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'container-registry-admin' --value $containerusername
+#az keyvault secret set --vault-name $YOUR_KEY_VAULT --name 'container-registry-admin-password' --value $containerpassword
 
 # General
 export RESOURCE_GROUP_NAME="$PROJECT_PREFIX-sonarqube-rg"
@@ -26,26 +26,26 @@ export APP_SERVICE_NAME="$PROJECT_PREFIX-sonarqube-app-service"
 export APP_SERVICE_SKU="P3v2"
 
 # Container image related
-export CONTAINER_REGISTRY_NAME="$YOUR_ACR_NAME"
-export CONTAINER_REGISTRY_FQDN="$CONTAINER_REGISTRY_NAME.azurecr.io"
-export REG_ADMIN_USER=`az keyvault secret show -n container-registry-admin --vault-name $YOUR_KEY_VAULT | jq -r '.value'`
-export REG_ADMIN_PASSWORD=`az keyvault secret show -n container-registry-admin-password --vault-name $YOUR_KEY_VAULT | jq -r '.value'`
+#export CONTAINER_REGISTRY_NAME="$YOUR_ACR_NAME"
+#export CONTAINER_REGISTRY_FQDN="$CONTAINER_REGISTRY_NAME.azurecr.io"
+#export REG_ADMIN_USER=`az keyvault secret show -n container-registry-admin --vault-name $YOUR_KEY_VAULT | jq -r '.value'`
+#export REG_ADMIN_PASSWORD=`az keyvault secret show -n container-registry-admin-password --vault-name $YOUR_KEY_VAULT | jq -r '.value'`
 export WEBAPP_NAME="$PROJECT_PREFIX-sonarqube-webapp"
-export CONTAINER_IMAGE_NAME="$PROJECT_PREFIX-sonar"
-export CONTAINER_IMAGE_TAG=$CONTAINER_IMAGE_TAG
+#export CONTAINER_IMAGE_NAME="$PROJECT_PREFIX-sonar"
+#export CONTAINER_IMAGE_TAG=$CONTAINER_IMAGE_TAG
 
 # Concatenated variable strings for better readability
 export DB_CONNECTION_STRING="jdbc:sqlserver://$SQL_SERVER_NAME.database.windows.net:1433;database=$DATABASE_NAME;user=$SQL_ADMIN_USER@$SQL_SERVER_NAME;password=$SQL_ADMIN_PASSWORD;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;"
 # Checkout the repository containing the Dockerfile and the config script
-git clone https://github.com/kuntal2318/sonarqube-azure-setup.git && cd sonarqube-azure-setup
+#git clone https://github.com/kuntal2318/sonarqube-azure-setup.git && cd sonarqube-azure-setup
 
 # Log into your Azure Container Registry  
-sudo az acr login --name $CONTAINER_REGISTRY_NAME
+#sudo az acr login --name $CONTAINER_REGISTRY_NAME
 
 # Build the image and push to the registry
-sudo docker build -t $CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG .
-sudo docker tag $CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG "$CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG"
-sudo docker push "$CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG"
+#sudo docker build -t $CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG .
+#sudo docker tag $CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG "$CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG"
+#sudo docker push "$CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG"
 
 # Add resource group; tag appropriately :-)
 az group create \
@@ -86,13 +86,13 @@ az webapp create \
     --resource-group $RESOURCE_GROUP_NAME \
     --plan $APP_SERVICE_NAME \
     --name $WEBAPP_NAME \
-    --deployment-container-image-name $CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG
+    --deployment-container-image-name sonarqube:developer
 	
 # Configure the WebApp
 az webapp config connection-string set \
     --resource-group $RESOURCE_GROUP_NAME \
     --name $WEBAPP_NAME -t SQLAzure \
-    --settings SONARQUBE_JDBC_URL=$DB_CONNECTION_STRING
+    --settings SONARQUBE_JDBC_URL=$DB_CONNECTION_STRING \
     --connection-string-type SQLAzure
 az webapp config set \
     --resource-group $RESOURCE_GROUP_NAME \
@@ -102,13 +102,6 @@ az webapp log config \
     --resource-group $RESOURCE_GROUP_NAME \
     --name $WEBAPP_NAME \
     --docker-container-logging filesystem
-az webapp config container set \
-    --name $WEBAPP_NAME \
-    --resource-group $RESOURCE_GROUP_NAME \
-    --docker-custom-image-name $CONTAINER_REGISTRY_FQDN/$CONTAINER_IMAGE_NAME:$CONTAINER_IMAGE_TAG \
-    --docker-registry-server-url https://$CONTAINER_REGISTRY_FQDN \
-    --docker-registry-server-user $REG_ADMIN_USER \
-    --docker-registry-server-password $REG_ADMIN_PASSWORD
 	
 # Restart app to ensure all environment variables are considered correctly; wait 5 minutes.
 az webapp restart \
